@@ -24,8 +24,8 @@ public class TxHandler {
      */
     public boolean isValidTx(Transaction tx) {
         UTXOPool validatedUTXOsPool = new UTXOPool();
-        int inSum = 0;
-        int outSum = 0;
+        double inSum = 0;
+        double outSum = 0;
 
         for (int i = 0 ; i < tx.numInputs() ; i++) {
             Transaction.Input input = tx.getInput(i);
@@ -41,17 +41,18 @@ public class TxHandler {
             // condition 3
             if (validatedUTXOsPool.contains(utxoToValidate)) return false;
 
-            // condition 4
-            if (tx.getOutput(input.outputIndex).value < 0) return false;
-
             validatedUTXOsPool.addUTXO(utxoToValidate, tx.getOutput(input.outputIndex));
             inSum += output.value;
         }
 
         for (Transaction.Output output : tx.getOutputs()) {
+            // condition 4
+            if (output.value < 0) return false;
+
             outSum += output.value;
         }
 
+        // condition 5
         return inSum >= outSum;
     }
 
@@ -64,7 +65,7 @@ public class TxHandler {
         ArrayList<Transaction> transactions = new ArrayList<>();
 
         for (Transaction tx : possibleTxs) {
-            if (!isValidTx(tx)) {
+            if (isValidTx(tx)) {
                 transactions.add(tx);
                 for (Transaction.Input in : tx.getInputs()) {
                     UTXO utxo = new UTXO(in.prevTxHash, in.outputIndex);
